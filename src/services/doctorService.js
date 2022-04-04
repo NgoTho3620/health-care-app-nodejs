@@ -1,6 +1,7 @@
 import db from '../models/index';
 require('dotenv').config();
 import _ from 'lodash';
+import emailService from './emailService';
 
 const MAX_NUMBER_SCHEDULE = process.env.MAX_NUMBER_SCHEDULE;
 
@@ -216,7 +217,7 @@ let getDetailDoctorById = (inputId) => {
                 });
 
                 if (data && data.image) {
-                    data.image = new Buffer(data.image, 'base64').toString('binary');
+                    data.image = Buffer.from(data.image, 'base64').toString('binary');
                 }
                 if (!data) data = {};
                 resolve({
@@ -417,7 +418,7 @@ let getProfileDoctorById = (doctorId) => {
                 });
 
                 if (data && data.image) {
-                    data.image = new Buffer(data.image, 'base64').toString('binary');
+                    data.image = Buffer.from(data.image, 'base64').toString('binary');
                 }
                 if (!data) data = {};
                 resolve({
@@ -476,6 +477,45 @@ let getListPatientForDoctor = (doctorId, date) => {
     });
 };
 
+let sendRemedy = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.email || !data.doctorId || !data.patientId) {
+                resolve({
+                    errCode: 1,
+                    errMessage: 'Missing required parameter',
+                });
+            } else {
+                //update patient status
+                let appointment = await db.Booking.findOne({
+                    where: {
+                        doctorId: data.doctorId,
+                        patientId: data.patientId,
+                        timeType: data.timeType,
+                        statusId: 'S2',
+                    },
+                    raw: false,
+                });
+
+                if (appointment) {
+                    appointment.statusId = 'S3';
+                    await appointment.save();
+                }
+
+                await emailService.sendAttachment(data);
+                //send email remedy
+
+                resolve({
+                    errCode: 0,
+                    errMessage: 'ok',
+                });
+            }
+        } catch (e) {
+            reject(e);
+        }
+    });
+};
+
 module.exports = {
     getTopDoctor,
     getAllDoctors,
@@ -486,4 +526,5 @@ module.exports = {
     getMoreInfoDoctorById,
     getProfileDoctorById,
     getListPatientForDoctor,
+    sendRemedy,
 };
