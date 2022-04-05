@@ -1,12 +1,12 @@
 import db from '../models/index';
 require('dotenv').config();
 
-let createNewClinic = (data) => {
+let createNewHandbook = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
             if (
                 !data.name ||
-                !data.address ||
+                !data.author ||
                 !data.imageBase64 ||
                 !data.descriptionHTML ||
                 !data.descriptionMarkdown
@@ -16,10 +16,10 @@ let createNewClinic = (data) => {
                     errMessage: 'Missing parameter',
                 });
             } else {
-                await db.Clinic.create({
+                await db.Handbook.create({
                     name: data.name,
+                    author: data.author,
                     image: data.imageBase64,
-                    address: data.address,
                     descriptionHTML: data.descriptionHTML,
                     descriptionMarkdown: data.descriptionMarkdown,
                 });
@@ -35,10 +35,10 @@ let createNewClinic = (data) => {
     });
 };
 
-let getAllClinic = () => {
+let getAllHandbook = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Clinic.findAll();
+            let data = await db.Handbook.findAll();
             if (data && data.length > 0) {
                 data.map((item) => {
                     item.image = Buffer.from(item.image, 'base64').toString('binary');
@@ -56,7 +56,7 @@ let getAllClinic = () => {
     });
 };
 
-let getDetailClinicById = (inputId) => {
+let getDetailHandbookById = (inputId) => {
     return new Promise(async (resolve, reject) => {
         try {
             if (!inputId) {
@@ -65,22 +65,19 @@ let getDetailClinicById = (inputId) => {
                     errMessage: 'Missing parameter',
                 });
             } else {
-                let data = await db.Clinic.findOne({
+                let data = await db.Handbook.findOne({
                     where: {
                         id: inputId,
                     },
-                    attributes: ['name', 'address', 'descriptionHTML', 'descriptionMarkdown'],
+                    attributes: [
+                        'name',
+                        'author',
+                        'descriptionHTML',
+                        'descriptionMarkdown',
+                        'createdAt',
+                        'updatedAt',
+                    ],
                 });
-                if (data) {
-                    let doctorClinic = [];
-                    doctorClinic = await db.Doctor_Info.findAll({
-                        where: { clinicId: inputId },
-                        attributes: ['doctorId', 'provinceId'],
-                    });
-                    data.doctorClinic = doctorClinic;
-                } else {
-                    data = {};
-                }
                 resolve({ errCode: 0, errMessage: 'ok', data });
             }
         } catch (e) {
@@ -90,7 +87,7 @@ let getDetailClinicById = (inputId) => {
 };
 
 module.exports = {
-    createNewClinic,
-    getAllClinic,
-    getDetailClinicById,
+    createNewHandbook,
+    getAllHandbook,
+    getDetailHandbookById,
 };

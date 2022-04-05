@@ -50,7 +50,10 @@ let postBookAppointment = (data) => {
                 });
 
                 if (user && user[0]) {
-                    await db.Booking.findOrCreate({
+                    await db.Booking.destroy({
+                        where: { patientId: user[0].id, statusId: 'S3' },
+                    });
+                    let oldUser = await db.Booking.findOrCreate({
                         where: { patientId: user[0].id },
                         defaults: {
                             statusId: 'S1',
@@ -61,6 +64,12 @@ let postBookAppointment = (data) => {
                             token: token,
                         },
                     });
+
+                    if (oldUser && oldUser[0]) {
+                        await db.Schedule.destroy({
+                            where: { date: oldUser[0].date, timeType: oldUser[0].timeType },
+                        });
+                    }
                 }
 
                 resolve({
