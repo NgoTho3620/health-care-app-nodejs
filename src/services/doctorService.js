@@ -26,6 +26,19 @@ let getTopDoctor = (limit) => {
                         as: 'genderData',
                         attributes: ['valueEN', 'valueVI'],
                     },
+                    {
+                        model: db.Doctor_Info,
+                        attributes: {
+                            exclude: ['id', 'doctorId'],
+                        },
+                        include: [
+                            {
+                                model: db.Specialty,
+                                as: 'specialtyData',
+                                attributes: ['name'],
+                            },
+                        ],
+                    },
                 ],
                 raw: true,
                 nest: true,
